@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GraphSense is an accessible beta tool for understanding supported line graphs through verified text and sound." />
+    <meta name="theme-color" content="#0e2033" />
+    <meta property="og:title" content="GraphSense | Accessible chart understanding" />
+    <meta property="og:description" content="Understand supported line graphs through verified text and sound." />
+    <meta property="og:type" content="website" />
+    <title>GraphSense | Accessible chart understanding</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to analysis tool</a>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="GraphSense home">
+        <span class="brand-mark" aria-hidden="true">G</span>
+        <span>GraphSense <small>Beta</small></span>
+      </a>
+      <a href="#how-it-works">How it works</a>
+    </header>
+
+    <main id="main-content">
+      <section class="hero" id="top" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Accessible STEM charts</p>
+          <h1 id="page-title">Understand the shape of a graph, independently.</h1>
+          <p class="hero-copy">GraphSense turns a supported line-graph image into a clear written explanation and an audio sweep. Your image stays on this device.</p>
+        </div>
+        <aside class="scope-note" aria-label="Beta scope">
+          <strong>What this beta supports</strong>
+          <p>One clear line, one data series, and visible x- and y-axes.</p>
+          <a href="#supported-chart">See supported charts</a>
+        </aside>
+      </section>
+
+      <section class="tool-shell" aria-labelledby="tool-title">
+        <div class="section-heading">
+          <p class="eyebrow">Analysis tool</p>
+          <h2 id="tool-title">Describe a line graph</h2>
+          <p>Choose an image, confirm its scale, then analyse it. GraphSense will tell you if the image is not suitable.</p>
+        </div>
+
+        <form id="analysis-form" novalidate>
+          <fieldset>
+            <legend>1. Choose a chart image</legend>
+            <div class="upload-row">
+              <label class="file-picker" for="chart-image">
+                <span>Choose image</span>
+                <input id="chart-image" name="chart-image" type="file" accept="image/png,image/jpeg,image/webp" />
+              </label>
+              <button id="load-demo" class="button button-quiet" type="button">Try the example chart</button>
+            </div>
+            <p id="file-status" class="field-help" aria-live="polite">PNG, JPG, or WebP. No image is uploaded to a server.</p>
+            <figure id="preview-wrap" class="preview-wrap" hidden>
+              <img id="chart-preview" alt="Selected chart preview" />
+              <figcaption id="preview-caption"></figcaption>
+            </figure>
+          </fieldset>
+
+          <fieldset>
+            <legend>2. Confirm the scale</legend>
+            <p class="field-help">Read these values from the chart or the material it came from. This keeps the result grounded in the actual scale.</p>
+            <div class="form-grid">
+              <label>Chart title <span class="optional">optional</span><input id="chart-title" name="chart-title" type="text" autocomplete="off" placeholder="e.g. Value versus Time" /></label>
+              <label>Unit <span class="optional">optional</span><input id="chart-unit" name="chart-unit" type="text" autocomplete="off" placeholder="e.g. kilograms" /></label>
+              <label>X-axis minimum<input id="x-min" name="x-min" type="number" step="any" required placeholder="e.g. 0" /></label>
+              <label>X-axis maximum<input id="x-max" name="x-max" type="number" step="any" required placeholder="e.g. 10" /></label>
+              <label>Y-axis minimum<input id="y-min" name="y-min" type="number" step="any" required placeholder="e.g. 0" /></label>
+              <label>Y-axis maximum<input id="y-max" name="y-max" type="number" step="any" required placeholder="e.g. 60" /></label>
+            </div>
+          </fieldset>
+
+          <div id="form-message" class="form-message" role="alert" hidden></div>
+          <button class="button button-primary" type="submit">Analyse line graph</button>
+        </form>
+      </section>
+
+      <section id="results" class="results" aria-labelledby="results-title" hidden tabindex="-1">
+        <div class="section-heading">
+          <p class="eyebrow">Result</p>
+          <h2 id="results-title">Your graph, explained</h2>
+          <p id="confidence-note" class="confidence-note" aria-live="polite"></p>
+        </div>
+        <div class="results-grid">
+          <article class="summary-card">
+            <h3>Overview</h3>
+            <p id="summary-text"></p>
+            <dl class="key-values">
+              <div><dt>Start</dt><dd id="start-value"></dd></div>
+              <div><dt>End</dt><dd id="end-value"></dd></div>
+              <div><dt>Highest point</dt><dd id="max-value"></dd></div>
+              <div><dt>Lowest point</dt><dd id="min-value"></dd></div>
+            </dl>
+          </article>
+          <article class="audio-card">
+            <h3>Listen to the data</h3>
+            <p>The pitch rises as the value rises. The sound is one way to sense the pattern; the written explanation remains the source of the result.</p>
+            <audio id="audio-player" controls preload="metadata"></audio>
+            <a id="download-audio" class="button button-quiet" download="graphsense-sonification.wav">Download audio</a>
+          </article>
+        </div>
+        <details>
+          <summary>How GraphSense produced this result</summary>
+          <p id="method-note"></p>
+        </details>
+      </section>
+
+      <section id="supported-chart" class="support-section" aria-labelledby="supported-title">
+        <div>
+          <p class="eyebrow">Before you upload</p>
+          <h2 id="supported-title">Use a chart GraphSense can read reliably.</h2>
+        </div>
+        <ul>
+          <li>Use a clear screenshot with one plotted line and visible axes.</li>
+          <li>Use the original chart where possible, not a photo taken at an angle.</li>
+          <li>Do not use charts with several lines, dense grids, or handwritten marks yet.</li>
+          <li>Check the written result against the original material before relying on it for coursework.</li>
+        </ul>
+      </section>
+
+      <section id="how-it-works" class="how-section" aria-labelledby="how-title">
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title">Built from a MATLAB research prototype.</h2>
+        <p>GraphSense uses a browser version of the chart-analysis and sonification rules developed in MATLAB. The public beta processes images locally in your browser, so it does not require a MATLAB account or send your class materials to a server.</p>
+      </section>
+    </main>
+    <footer><p>GraphSense beta. A Team Sync accessibility project.</p></footer>
+    <script src="script.js"></script>
+  </body>
+</html>
