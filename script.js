@@ -98,22 +98,32 @@ function analyseLineGraph(image, scale) {
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   const { width, height } = canvas;
   const pixels = context.getImageData(0, 0, width, height).data;
-  const darkAt = (x, y) => {
+  const pixelAt = (x, y) => {
     const index = (y * width + x) * 4;
     const r = pixels[index], g = pixels[index + 1], b = pixels[index + 2];
     const luminance = r * .2126 + g * .7152 + b * .0722;
     const spread = Math.max(r, g, b) - Math.min(r, g, b);
-    return luminance < 132 || (spread > 70 && luminance < 220);
+    return { luminance, spread, alpha: pixels[index + 3] };
+  };
+  // Axis lines are often light grey, while the plotted line is darker or coloured.
+  // Keep these masks separate so that grid lines do not become data points.
+  const axisAt = (x, y) => {
+    const { luminance, alpha } = pixelAt(x, y);
+    return alpha > 100 && luminance < 235;
+  };
+  const lineAt = (x, y) => {
+    const { luminance, spread, alpha } = pixelAt(x, y);
+    return alpha > 100 && (luminance < 115 || (spread > 70 && luminance < 220));
   };
 
   const rowCounts = Array.from({ length: height }, (_, y) => {
     let count = 0;
-    for (let x = Math.round(width * .04); x < Math.round(width * .96); x += 1) if (darkAt(x, y)) count += 1;
+    for (let x = Math.round(width * .04); x < Math.round(width * .96); x += 1) if (axisAt(x, y)) count += 1;
     return count;
   });
   const colCounts = Array.from({ length: width }, (_, x) => {
     let count = 0;
-    for (let y = Math.round(height * .04); y < Math.round(height * .96); y += 1) if (darkAt(x, y)) count += 1;
+    for (let y = Math.round(height * .04); y < Math.round(height * .96); y += 1) if (axisAt(x, y)) count += 1;
     return count;
   });
 
@@ -131,12 +141,17 @@ function analyseLineGraph(image, scale) {
     return { ok: false, reason: 'GraphSense could not identify the chart area. Try the original chart image rather than a cropped or angled photo.' };
   }
 
+  const topAxisRows = horizontalCandidates
+    .map(({ y }) => y)
+    .filter((y) => y > height * .05 && y < xAxisY - 45);
   const verticalInk = [];
-  for (let y = 0; y < xAxisY - 5; y += 1) if (darkAt(yAxisX, y)) verticalInk.push(y);
-  const yTop = Math.max(0, Math.min(...verticalInk) - 2);
+  for (let y = Math.round(height * .05); y < xAxisY - 5; y += 1) if (axisAt(yAxisX, y)) verticalInk.push(y);
+  // Prefer the upper horizontal plot boundary/grid line. This avoids mistaking
+  // title characters that happen to sit above a vertical axis for the plot top.
+  const yTop = topAxisRows.length ? topAxisRows[0] : Math.max(0, Math.min(...verticalInk) - 2);
   const xRight = Math.max(...horizontalCandidates.filter(({ y }) => Math.abs(y - xAxisY) <= 2).flatMap(({ y }) => {
     const coordinates = [];
-    for (let x = yAxisX + 8; x < width; x += 1) if (darkAt(x, y)) coordinates.push(x);
+    for (let x = yAxisX + 8; x < width; x += 1) if (axisAt(x, y)) coordinates.push(x);
     return coordinates;
   }));
   if (!Number.isFinite(yTop) || !Number.isFinite(xRight) || xRight - yAxisX < 80 || xAxisY - yTop < 60) {
@@ -149,7 +164,7 @@ function analyseLineGraph(image, scale) {
     const targetX = Math.round(yAxisX + 10 + ((xRight - yAxisX - 20) * i) / (pointCount - 1));
     const ys = [];
     for (let x = targetX - 3; x <= targetX + 3; x += 1) {
-      for (let y = yTop + 4; y < xAxisY - 7; y += 1) if (darkAt(x, y)) ys.push(y);
+      for (let y = yTop + 4; y < xAxisY - 7; y += 1) if (lineAt(x, y)) ys.push(y);
     }
     if (!ys.length) continue;
     ys.sort((a, b) => a - b);
